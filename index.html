@@ -10,10 +10,13 @@
 <body>
 <!-- Custom markup of the UI Extension -->
 <div class="cf-form-field">
+    <a href="/" class="cf-btn-primary" target="_blank">Förhandsgranska Kopplade Nyckeltal</a>
     <input type="text" class="cf-form-input">
     <div class="cf-form-hint">I am a Björn UI Extension.</div>
     <div class="cf-form-hint">Instance params: <span class="instance-param-value"></span></div>
     <div class="cf-form-hint">Installation params: <span class="installation-param-value"></span></div>
+
+    <div class="cf-form-hint">Installation params: <span id="kpi-data">Laddar..</span></div>
 </div>
 
 <!-- Custom logic of the UI Extension -->
@@ -38,6 +41,14 @@
     document.querySelector('.instance-param-value').appendChild(document.createTextNode(extensionsApi.parameters.instance.exampleParameter))
     document.querySelector('.installation-param-value').appendChild(document.createTextNode(extensionsApi.parameters.installation.exampleParameter))
 
+    var instrumentField = extensionsApi.entry.fields.instruments[0]; // Takes first instrument's KPI's
+    console.log('instrumentsField:', instrumentField);
+
+    var instrumentId = instrumentField.getValue();
+    console.log('instrumentId:', instrumentId);
+
+    var instrument = extensionsApi.space.getEntry(instrumentId);
+    console.log('instrument:', instrument);
 
     // Callback for changes of the field value.
     var detachValueChangeHandler = field.onValueChanged(valueChangeHandler);
