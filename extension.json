@@ -2,21 +2,22 @@
   "id": "bolagsanalys-preview",
   "name": "Nyckeltals-review for a Bolagsanalys",
   "srcdoc": "index.html",
-  "fieldTypes": ["Symbol", "Text"],
+  "fieldTypes": ["Object"],
   "parameters": {
     "instance": [
       {
         "id": "exampleParameter",
-        "type": "Symbol",
-        "name": "An example instance parameter"
+        "type": "Object",
+        "name": "An example instance json parameter"
       }
     ],
     "installation": [
       {
         "id": "exampleParameter",
-        "type": "Symbol",
-        "name": "An example installation parameter"
+        "type": "Object",
+        "name": "An example installation json parameter"
       }
     ]
   }
 }
+
