@@ -1,5 +1,5 @@
 {
-  "id": "bolagsanalys-review",
+  "id": "bolagsanalys-preview",
   "name": "Nyckeltals-review for a Bolagsanalys",
   "srcdoc": "index.html",
   "fieldTypes": ["Symbol", "Text"],
