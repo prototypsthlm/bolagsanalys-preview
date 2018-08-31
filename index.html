@@ -41,6 +41,9 @@
     document.querySelector('.instance-param-value').appendChild(document.createTextNode(extensionsApi.parameters.instance.exampleParameter))
     document.querySelector('.installation-param-value').appendChild(document.createTextNode(extensionsApi.parameters.installation.exampleParameter))
 
+    console.log('extensionsApi.entry:', extensionsApi.entry);
+    console.log('extensionsApi.entry.fields:', extensionsApi.entry.fields);
+
     var instrumentField = extensionsApi.entry.fields.instruments[0]; // Takes first instrument's KPI's
     console.log('instrumentsField:', instrumentField);
 
