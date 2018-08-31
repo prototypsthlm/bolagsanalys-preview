@@ -37,6 +37,7 @@
 
     //  The field this UI Extension is assigned to.
     var field = extensionsApi.field;
+    var lang = extensionsApi.locales.default;
 
     document.querySelector('.instance-param-value').appendChild(document.createTextNode(extensionsApi.parameters.instance.exampleParameter))
     document.querySelector('.installation-param-value').appendChild(document.createTextNode(extensionsApi.parameters.installation.exampleParameter))
@@ -45,13 +46,32 @@
     console.log('extensionsApi.entry.fields:', extensionsApi.entry.fields);
 
     var instruments = extensionsApi.entry.fields.instruments.getValue(); // Takes first instrument's KPI's
-    console.log('instruments:', instruments)
+    console.log('instruments:', instruments);
 
-    var instrumentId = instruments[0];
-    console.log('instrumentId:', instrumentId);
+    if(instruments.length < 1) {
+      console.log('#todo: handle no instruments')
+    }
 
-    var instrument = extensionsApi.space.getEntry(instrumentId);
-    console.log('instrument:', instrument);
+    extensionsApi.space.getEntry(instruments[0].sys.id).then(function (instrument) {
+      console.log('instrument:', instrument);
+
+      var targetIsin = instrument.fields.isin[lang];
+      console.log('targetIsin:', targetIsin);
+
+      // Gets newest KPI with the desired ISIN
+      var query = {};
+      query['content_type'] = 'ordinarieNyckeltalAktuella';
+      query['fields.isin'] = targetIsin;
+      query['sys.publishedAt[exists]'] = true;
+      query['limit'] = 1;
+      query['order'] = 'sys.publishedAt';
+
+      extensionsApi.space.getEntries(query).then(function (result) {
+        console.log('result:', result)
+        return result.total > 0
+      });
+    });
+
 
     // Callback for changes of the field value.
     var detachValueChangeHandler = field.onValueChanged(valueChangeHandler);
