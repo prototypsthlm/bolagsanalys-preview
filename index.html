@@ -4,19 +4,29 @@
     <meta charset="utf-8">
     <!-- UI Extensions CSS -->
     <link rel="stylesheet" href="https://contentful.github.io/ui-extensions-sdk/cf-extension.css">
+    <style>
+        .cf-btn-primary.disabled {
+            opacity: 0.4;
+            -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=40)";
+            filter: alpha(opacity=40);
+            cursor: default;
+            background: -webkit-linear-gradient(bottom, #3c80cf, #5b9fef);
+            background: -moz-linear-gradient(bottom, #3c80cf, #5b9fef);
+            background: -o-linear-gradient(bottom, #3c80cf, #5b9fef);
+            background: -ms-linear-gradient(bottom, #3c80cf, #5b9fef);
+            background: linear-gradient(to top, #3c80cf, #5b9fef);
+            -webkit-box-shadow: none;
+            box-shadow: none;
+            pointer-events: none !important;
+        }
+    </style>
     <!-- UI Extensions SDK -->
     <script src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
 </head>
 <body>
 <!-- Custom markup of the UI Extension -->
 <div class="cf-form-field">
-    <a href="/" class="cf-btn-primary" target="_blank">Förhandsgranska Kopplade Nyckeltal</a>
-    <input type="text" class="cf-form-input">
-    <div class="cf-form-hint">I am a Björn UI Extension.</div>
-    <div class="cf-form-hint">Instance params: <span class="instance-param-value"></span></div>
-    <div class="cf-form-hint">Installation params: <span class="installation-param-value"></span></div>
-
-    <div class="cf-form-hint">Installation params: <span id="kpi-data">Laddar..</span></div>
+    <a class="cf-btn-primary disabled" id="js-preview-button">Förhandsgranska Kopplade Nyckeltal</a>
 </div>
 
 <!-- Custom logic of the UI Extension -->
@@ -26,81 +36,92 @@
   // When UI Extensions SDK is loaded the callback will be executed.
   window.contentfulExtension.init(initExtension);
 
-  function initExtension (extensionsApi) {
-    // "extensionsApi" is providing an interface documented here:
+  function initExtension(sdk) {
+    // "sdk" is providing an interface documented here:
     // https://github.com/contentful/ui-extensions-sdk/blob/master/docs/ui-extensions-sdk-frontend.md
 
-    // Automatically adjust UI Extension size in the Web App.
-    extensionsApi.window.startAutoResizer();
-
-    var inputEl = document.querySelector('.cf-form-input');
-
     //  The field this UI Extension is assigned to.
-    var field = extensionsApi.field;
-    var lang = extensionsApi.locales.default;
+    const field = sdk.field;
+    // Current language
+    const lang = sdk.locales.default;
+    // Field that holds a reference to instrument
+    const instrumentsField = sdk.entry.fields.instruments;
 
-    document.querySelector('.instance-param-value').appendChild(document.createTextNode(extensionsApi.parameters.instance.exampleParameter))
-    document.querySelector('.installation-param-value').appendChild(document.createTextNode(extensionsApi.parameters.installation.exampleParameter))
 
-    console.log('extensionsApi.entry:', extensionsApi.entry);
-    console.log('extensionsApi.entry.fields:', extensionsApi.entry.fields);
+    console.log('instrumentsField: ', instrumentsField);
 
-    var instruments = extensionsApi.entry.fields.instruments.getValue(); // Takes first instrument's KPI's
-    console.log('instruments:', instruments);
-
-    if(instruments.length < 1) {
-      console.log('#todo: handle no instruments')
+    function handleError(error) {
+      console.error('Error: ', error);
     }
 
-    extensionsApi.space.getEntry(instruments[0].sys.id).then(function (instrument) {
-      console.log('instrument:', instrument);
-
-      var targetIsin = instrument.fields.isin[lang];
-      console.log('targetIsin:', targetIsin);
-
-      // Gets newest KPI with the desired ISIN
-      var query = {};
-      query['content_type'] = 'ordinarieNyckeltalAktuella';
-      query['fields.isin'] = targetIsin;
-      query['sys.publishedAt[exists]'] = true;
-      query['limit'] = 1;
-      query['order'] = 'sys.publishedAt';
-
-      extensionsApi.space.getEntries(query).then(function (result) {
-        console.log('result:', result)
-        return result.total > 0
-      });
-    });
-
-
-    // Callback for changes of the field value.
-    var detachValueChangeHandler = field.onValueChanged(valueChangeHandler);
-    // Handle keyboard input.
-    inputEl.addEventListener('input', keyboardInputHandler);
-    // Handle DOM "onbeforeunload" event.
-    window.addEventListener('onbeforeunload', unloadHandler);
-
-    // Handler for external field value changes (e.g. when multiple authors are working on the same entry).
-    function valueChangeHandler (value) {
-      inputEl.value = value || '';
-    }
-
-    // Event handler for keyboard input.
-    function keyboardInputHandler () {
-      var value = inputEl.value;
-      if (typeof value !== 'string' || value === '') {
-        field.removeValue();
+    function toggleLinkEnabled(value) {
+      const linkEl = document.getElementById("js-preview-button");
+      if (value === true) {
+        console.log('enabling..')
+        linkEl.classList.remove("disabled")
       } else {
-        field.setValue(value);
+        console.log('disabling..')
+        linkEl.classList.add("disabled")
+        sdk.field.removeValue();
       }
     }
 
-    // Event handler for window unload.
-    function unloadHandler () {
-      window.removeEventListener('onbeforeunload', unloadHandler);
-      inputEl.removeEventListener('input', keyboardInputHandler);
-      detachValueChangeHandler();
+    function validateInstruments(instrumentsField) {
+      const instrumentsArr = instrumentsField.getValue();
+      console.log('validating this: ', instrumentsArr);
+      if(instrumentsArr && instrumentsArr.length > 0) {
+        toggleLinkEnabled(true)
+      } else {
+        toggleLinkEnabled(false)
+      }
     }
+
+    function setKpiSnapshot() {
+
+      const instrumentsArr = instrumentsField.getValue();
+
+      console.log('instrumentsField: ', instrumentsField);
+      console.log('instrumentsArr: ', instrumentsArr);
+
+      // No value for instruments field
+      if (!instrumentsField || !instrumentsArr || instrumentsArr.length < 1) { return; }
+
+      // Fetch instrument to look at it's ISIN
+      sdk.space.getEntry(instrumentsArr[0].sys.id).then(function (instrument) {
+        const targetIsin = instrument.fields.isin[lang];
+
+        // Gets newest KPI with the desired ISIN
+        const query = {};
+        query['content_type'] = 'ordinarieNyckeltalAktuella';
+        query['fields.isin'] = targetIsin;
+        query['sys.publishedAt[exists]'] = true;
+        query['limit'] = 1;
+        query['order'] = 'sys.publishedAt';
+
+        // Fetch KPI
+        sdk.space.getEntries(query).then(function (searchResult) {
+          console.log('searchResult: ', searchResult);
+          const kpi = searchResult.items[0]
+          const json = JSON.stringify((kpi.fields));
+
+          field.setValue(json);
+        })
+      }).catch(function (error) {
+        handleError(error)
+      });
+    }
+
+    // Automatically adjust UI Extension size in the Web App.
+    sdk.window.startAutoResizer();
+
+    // Start listening for changes on instrument field
+    instrumentsField.onValueChanged(function() {
+      validateInstruments(instrumentsField)
+    });
+
+    validateInstruments(instrumentsField);
+
+    document.getElementById("js-preview-button").addEventListener("click", setKpiSnapshot);
   }
 </script>
 </body>
