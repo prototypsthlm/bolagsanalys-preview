@@ -19,6 +19,20 @@
             box-shadow: none;
             pointer-events: none !important;
         }
+        .cfnext-form__field-errors {
+            word-wrap: break-word;
+            margin-top: 0.642857142857143em;
+            margin-bottom: 0;
+            color: #d9453f;
+            padding-left: 0;
+        }
+        .cfnext-form__field-errors > li {
+            margin-bottom: 0.642857142857143em;
+            list-style-type: none;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
     <!-- UI Extensions SDK -->
     <script src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
@@ -27,6 +41,9 @@
 <!-- Custom markup of the UI Extension -->
 <div class="cf-form-field">
     <a class="cf-btn-primary disabled" id="js-preview-button">Förhandsgranska Kopplade Nyckeltal</a>
+    <ul class="cfnext-form__field-errors hidden" id="js-preview-btn-errors">
+        <li>You need to specify a value for the field "Aktier"</li>
+    </ul>
 </div>
 
 <!-- Custom logic of the UI Extension -->
@@ -56,12 +73,16 @@
 
     function toggleLinkEnabled(value) {
       const linkEl = document.getElementById("js-preview-button");
+      const errorList = document.getElementById("js-preview-btn-errors");
       if (value === true) {
         console.log('enabling..')
-        linkEl.classList.remove("disabled")
+        linkEl.classList.remove("disabled");
+        errorList.classList.add("hidden");
+
       } else {
         console.log('disabling..')
-        linkEl.classList.add("disabled")
+        linkEl.classList.add("disabled");
+        errorList.classList.remove("hidden");
         sdk.field.removeValue();
       }
     }
