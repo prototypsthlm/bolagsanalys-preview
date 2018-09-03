@@ -123,7 +123,7 @@
         sdk.space.getEntries(query).then(function (searchResult) {
           console.log('searchResult: ', searchResult);
           const kpi = searchResult.items[0]
-          const json = JSON.stringify((kpi.fields));
+          const json = (kpi.fields);
 
           field.setValue(json);
         })
